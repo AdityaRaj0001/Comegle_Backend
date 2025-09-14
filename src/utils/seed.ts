@@ -63,6 +63,12 @@ export async function seedColleges() {
       country: "India",
       state: "Uttar Pradesh",
     },
+    {
+      name: "SKDIV Inc.",
+      email_domain: "skdiv.com",
+      country: "India",
+      state: "Hyderabad",
+    },
   ];
 
   for (const college of colleges) {

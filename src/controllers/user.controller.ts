@@ -58,7 +58,9 @@ export const checkSession = async (req: Request, res: Response): Promise<void> =
     }
 
     // Fetch user
-    const user = await prisma.user.findUnique({ where: { id: userId ? String(userId) : undefined } });
+    const user = await prisma.user.findUnique({ where: { id: userId ? String(userId) : undefined }, include: { college: true }, omit : {
+      id: true, createdAt: true, updatedAt: true , college_id: true
+    } });
     if (!user) {
       res.status(404).json({ success: false, message: "User not found" });
       return;
@@ -67,6 +69,7 @@ export const checkSession = async (req: Request, res: Response): Promise<void> =
     res.json({
       success: true,
       data: {
+        user,
         accessToken: effectiveAccessToken,
       },
     });
