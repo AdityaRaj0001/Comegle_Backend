@@ -6,10 +6,15 @@ import { PORT } from "./config/env";
 import routes from "./routes";
 import swaggerDocument from "./swagger";
 
+import cookieParser from "cookie-parser";
+
+
 const app = express();
 
 // ✅ Allowed origins
 app.use(corsOptions);
+
+app.use(cookieParser());
 
 app.use(express.json());
 

@@ -5,61 +5,61 @@ export async function seedColleges() {
   const colleges = [
     {
       name: "IIT Ropar",
-      emailDomain: "iitrpr.ac.in",
+      email_domain: "iitrpr.ac.in",
       country: "India",
       state: "Punjab",
     },
     {
       name: "MNNIT Allahabad",
-      emailDomain: "mnnit.ac.in",
+      email_domain: "mnnit.ac.in",
       country: "India",
       state: "Uttar Pradesh",
     },
     {
       name: "IIT Bombay",
-      emailDomain: "iitb.ac.in",
+      email_domain: "iitb.ac.in",
       country: "India",
       state: "Maharashtra",
     },
     {
       name: "IIT Kharagpur",
-      emailDomain: "iitkgp.ac.in",
+      email_domain: "iitkgp.ac.in",
       country: "India",
       state: "West Bengal",
     },
     {
       name: "IIT Madras",
-      emailDomain: "iitm.ac.in",
+      email_domain: "iitm.ac.in",
       country: "India",
       state: "Tamil Nadu",
     },
     {
       name: "NIT Trichy",
-      emailDomain: "nitt.edu",
+      email_domain: "nitt.edu",
       country: "India",
       state: "Tamil Nadu",
     },
     {
       name: "NIT Surathkal",
-      emailDomain: "nitk.ac.in",
+      email_domain: "nitk.ac.in",
       country: "India",
       state: "Karnataka",
     },
     {
       name: "NIT Warangal",
-      emailDomain: "nitw.ac.in",
+      email_domain: "nitw.ac.in",
       country: "India",
       state: "Telangana",
     },
     {
       name: "IIT Delhi",
-      emailDomain: "iitd.ac.in",
+      email_domain: "iitd.ac.in",
       country: "India",
       state: "Delhi",
     },
     {
       name: "IIT Kanpur",
-      emailDomain: "iitk.ac.in",
+      email_domain: "iitk.ac.in",
       country: "India",
       state: "Uttar Pradesh",
     },
@@ -67,7 +67,7 @@ export async function seedColleges() {
 
   for (const college of colleges) {
     await prisma.college.upsert({
-      where: { emailDomain: college.emailDomain },
+      where: { email_domain: college.email_domain },
       update: {}, // do nothing if exists
       create: college,
     });

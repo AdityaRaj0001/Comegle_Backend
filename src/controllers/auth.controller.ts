@@ -4,6 +4,8 @@ import { prisma } from "../config/db";
 
 import { verifyGoogleIdToken } from "../utils/google";
 
+import { generateAccessToken, generateRefreshToken } from "../utils/jwt";
+
 export const googleAuth = async (
   req: Request,
   res: Response,
@@ -39,17 +41,29 @@ export const googleAuth = async (
     let user = await prisma.user.findUnique({
       where: { email },
       include: { college: true },
+      omit: { createdAt: true, updatedAt: true },
     });
 
     if (user) {
-      const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, {
-        expiresIn: "7d",
+      const payload = { userId: user.id };
+
+      // Generate tokens
+      const accessToken = generateAccessToken(payload);
+      const refreshToken = generateRefreshToken(payload);
+
+      // Set refresh token in httpOnly cookie
+      res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "development",
+        sameSite: "lax",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
       });
 
+      // Send access token in body (do NOT send refresh token)
       res.status(200).json({
         success: true,
         message: "User already exists",
-        data: { token, user },
+        data: { user, accessToken },
       });
       return;
     }
@@ -57,7 +71,7 @@ export const googleAuth = async (
     // ✅ Check if college allowed
     const domain = email.split("@")[1];
     const college = await prisma.college.findUnique({
-      where: { emailDomain: domain },
+      where: { email_domain: domain },
     });
 
     if (!college) {
@@ -67,7 +81,7 @@ export const googleAuth = async (
         data: {
           user: {
             email,
-            fullName: name,
+            full_name: name,
           },
         },
       });
@@ -82,8 +96,8 @@ export const googleAuth = async (
         user: {
           college: { id: college.id, name: college.name },
           email,
-          fullName: name,
-          avatarUrl: picture,
+          full_name: name,
+          avatar_url: picture,
         },
       },
     });

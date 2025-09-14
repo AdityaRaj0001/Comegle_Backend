@@ -2,31 +2,15 @@ import { Request, Response } from "express";
 import { prisma } from "../config/db";
 import jwt from "jsonwebtoken";
 
+import { generateAccessToken,generateRefreshToken } from "../utils/jwt";
+
 export const saveUserOnboarding = async (
   req: Request,
   res: Response
 ): Promise<void> => {
   try {
-    const { fullName, username, avatarUrl, email, gender, age, collegeId } =
+    const { full_name, username, avatar_url, email, gender, age, college_id } =
       req.body;
-
-    if (
-      !fullName ||
-      !username ||
-      !avatarUrl ||
-      !email ||
-      !gender ||
-      !age ||
-      !collegeId
-    ) {
-      res.status(400).json({
-        success: false,
-        message:
-          "All fields (fullName, username, avatarUrl, email, gender, age, collegeId) are required",
-        data: null,
-      });
-      return;
-    }
 
     // check if username already exists
     const existingUsername = await prisma.user.findUnique({
@@ -53,7 +37,7 @@ export const saveUserOnboarding = async (
     }
 
     const college = await prisma.college.findUnique({
-      where: { id: Number(collegeId) },
+      where: { id: college_id },
     });
     // validate collegeId exists  ( yeh hoga nhi actually kabhi )
     if (!college) {
@@ -68,28 +52,36 @@ export const saveUserOnboarding = async (
     // create user and link with college
     const newUser = await prisma.user.create({
       data: {
-        fullName,
+        full_name,
         username,
-        avatarUrl,
+        avatar_url,
         email,
         gender,
         age: Number(age),
-        collegeId: Number(collegeId),
+        college_id: college_id,
       },
       include: { college: true },
-      omit: { collegeId: true },
+      omit: { college_id: true, createdAt: true, updatedAt: true },
     });
 
     if (newUser) {
-      const token = jwt.sign({ userId: newUser.id }, process.env.JWT_SECRET!, {
-        expiresIn: "7d",
-      });
+     
+      const accessToken = generateAccessToken({ userId: newUser.id });
+      const refreshToken = generateRefreshToken({ userId: newUser.id });
+      // set the refresh token as cookie
+res.cookie("refreshToken", refreshToken, {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "development",
+  sameSite: "lax",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+});
 
-      res.status(200).json({
-        success: true,
-        message: "User onboarded successfully",
-        data: { token, user: newUser },
-      });
+// send access token in response
+res.status(201).json({
+  success: true,
+  message: "Onboarding complete.",
+  data: { user: newUser, accessToken },
+});
       return;
     }
   } catch (err) {
