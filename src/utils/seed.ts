@@ -69,6 +69,12 @@ export async function seedColleges() {
       country: "India",
       state: "Hyderabad",
     },
+    {
+      name: "IIT Dholakpur",
+      email_domain: "gmail.com",
+      country: "India",
+      state: "Sikkim",
+    },
   ];
 
   for (const college of colleges) {
