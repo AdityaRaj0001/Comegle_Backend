@@ -28,11 +28,27 @@ model User {
   email      String @unique
   gender     String
   age        Int
+  country    String  @default("")
 
-  // 👇 Relation: one user belongs to one college
   college_id String
   college    College @relation(fields: [college_id], references: [id])
 
+  bio     String?
+  tags       String[]  
+
+  socials UserSocials?
+
   createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt // ✅ auto-updated on changes
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+model UserSocials {
+  id         String   @id @default(uuid())
+  linked_in  String?
+  twitter    String?
+  instagram  String?
+  user_id    String   @unique
+  user       User     @relation(fields: [user_id], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
 }

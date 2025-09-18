@@ -5,9 +5,27 @@ import {
   verifyRefreshToken,
   generateAccessToken,
 } from "../utils/jwt";
-
 import { clearRefreshCookie } from "./session.controller";
 
+function getSocialLinks(socials?: { linked_in?: string; twitter?: string; instagram?: string }) {
+  return {
+    linked_in: socials?.linked_in || "",
+    twitter: socials?.twitter || "",
+    instagram: socials?.instagram || "",
+  };
+}
+
+// Remove socials from user object and add socialLinks
+function shapeUser(user: any) {
+  if (!user) return null;
+  const { socials, ...userWithoutSocials } = user;
+  return {
+    ...userWithoutSocials,
+    socialLinks: getSocialLinks(socials),
+  };
+}
+
+// SESSION CHECKER
 export const checkSession = async (req: Request, res: Response): Promise<void> => {
   try {
     const authHeader = req.headers.authorization;
@@ -15,52 +33,39 @@ export const checkSession = async (req: Request, res: Response): Promise<void> =
       ? authHeader.split(" ")[1]
       : undefined;
 
-    // CASE 1: No access token provided at all
     if (!accessToken) {
-      res
-        .status(403)
-        .json({ success: false, message: "Token Not Present" });
+      res.status(403).json({ success: false, message: "Token Not Present" });
       return;
     }
 
-    let userId: number | undefined;
+    let userId: string | undefined;
     let effectiveAccessToken: string | undefined = accessToken;
 
-    // Try to verify access token
     try {
       const decoded: any = verifyAccessToken(accessToken);
       userId = decoded.userId;
-      // access token is valid; we keep using it
     } catch {
-      // Access token invalid/expired -> attempt refresh token path
       const refreshToken = req.cookies?.refreshToken;
       if (!refreshToken) {
-        res
-          .status(403)
-          .json({ success: false, message: "Refresh Token Not Present" });
+        res.status(403).json({ success: false, message: "Refresh Token Not Present" });
         return;
       }
-
       try {
         const decodedRefresh: any = verifyRefreshToken(refreshToken);
         userId = decodedRefresh.userId;
-        // Issue a new access token
         effectiveAccessToken = generateAccessToken({ userId });
       } catch {
-        // Invalid / expired refresh token
         clearRefreshCookie(res);
-        res
-          .status(403)
-          .json({ success: false, message: "Invalid Refresh Token" });
+        res.status(403).json({ success: false, message: "Invalid Refresh Token" });
         return;
-  
       }
     }
 
-    // Fetch user
-    const user = await prisma.user.findUnique({ where: { id: userId ? String(userId) : undefined }, include: { college: true }, omit : {
-      id: true, createdAt: true, updatedAt: true , college_id: true
-    } });
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { college: true, socials: true },
+    });
+
     if (!user) {
       res.status(404).json({ success: false, message: "User not found" });
       return;
@@ -68,15 +73,74 @@ export const checkSession = async (req: Request, res: Response): Promise<void> =
 
     res.json({
       success: true,
-      data: {
-        user,
-        accessToken: effectiveAccessToken,
-      },
+      user: shapeUser(user),
+      accessToken: effectiveAccessToken,
     });
   } catch (err) {
     console.error("Session error:", err);
-    res
-      .status(500)
-      .json({ success: false, message: "Something went wrong (session)" });
+    res.status(500).json({ success: false, message: "Something went wrong (session)" });
+  }
+};
+
+// SAVE USER DETAILS
+export const saveUserDetails = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = (req as any).userId;
+    if (!userId) {
+      res.status(401).json({ success: false, message: "Unauthorized: User not found" });
+      return;
+    }
+
+    const {
+      full_name,
+      username,
+      avatar_url,
+      gender,
+      country,
+      bio,
+      tags,
+      socials,
+    } = req.body;
+
+    const updateData: any = {};
+    if (full_name !== undefined) updateData.full_name = full_name;
+    if (username !== undefined) updateData.username = username;
+    if (avatar_url !== undefined) updateData.avatar_url = avatar_url;
+    if (gender !== undefined) updateData.gender = gender;
+    if (country !== undefined) updateData.country = country;
+    if (bio !== undefined) updateData.bio = bio;
+    if (tags !== undefined) updateData.tags = tags;
+
+    // Always upsert socials, even if empty strings, so user can clear links
+    if (socials !== undefined) {
+      updateData.socials = {
+        upsert: {
+          update: {
+            linked_in: socials.linked_in ?? "",
+            twitter: socials.twitter ?? "",
+            instagram: socials.instagram ?? "",
+          },
+          create: {
+            linked_in: socials.linked_in ?? "",
+            twitter: socials.twitter ?? "",
+            instagram: socials.instagram ?? "",
+          },
+        },
+      };
+    }
+
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: updateData,
+      include: { college: true, socials: true },
+    });
+
+    res.json({ success: true, user: shapeUser(user) });
+  } catch (err: any) {
+    console.error("Save user details error:", err);
+    res.status(500).json({
+      success: false,
+      message: err.message || "Could not save user details",
+    });
   }
 };
