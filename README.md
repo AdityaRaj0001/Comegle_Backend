@@ -1,130 +1,100 @@
-# Comegle Backend
+# Comegle_Backend
 
-A TypeScript backend for Comegle — a college-restricted chat platform, with Express, Prisma, Swagger, Supabase, and seeding support.
-
----
-
-## Features
-
-- **Express** server in TypeScript
-- **Prisma** ORM with PostgreSQL (hosted on Supabase)
-- **Swagger** API documentation
-- **CORS** support for frontend integration
-- **Seeding** capability for initial college data
-
----
-
-## Prerequisites
-
-- Node.js >= 18
-- npm
-- PostgreSQL database (recommended: [Supabase](https://supabase.com/))
-- [Prisma CLI](https://www.prisma.io/docs/reference/api-reference/command-reference#cli-commands) (installed as a dev dependency)
-
----
-
-## Getting Started
-
-### 1. Clone & Install
-
-```bash
-git clone https://github.com/yourusername/comegle-backend.git
-cd comegle-backend
-npm install
-```
-
-### 2. Configure Environment
-
-Copy `.env.example` to `.env` and fill in your Supabase/Postgres credentials:
-
-```env
-DATABASE_URL="postgresql://username:password@host:port/database"
-```
-
-### 3. Prisma Setup
-
-Generate the Prisma client:
-
-```bash
-npx prisma generate
-```
-
-Run database migrations:
-
-```bash
-npx prisma migrate dev --name init
-```
-
-(Optional) View your DB in Prisma Studio:
-
-```bash
-npx prisma studio
-```
-
-### 4. Seed the Database
-
-Seed initial college data (from `src/utils/seed.ts`):
-
-```bash
-npx ts-node src/utils/seed.ts
-# or, if using the npm script:
-npm run seed
-```
-
-### 5. Start the Development Server
-
-```bash
-npm run dev
-```
-
-The server will start (default: http://localhost:3000).
-
----
-
-## API Documentation
-
-Swagger UI is available at:  
-[http://localhost:3000/api-docs](http://localhost:3000/api-docs)
-
----
-
-## Useful Commands
-
-| Command                       | Description                                 |
-|-------------------------------|---------------------------------------------|
-| `npm run dev`                 | Run the server in development mode          |
-| `npm run build`               | Build the project (TypeScript output in /build) |
-| `npm start`                   | Start the server from compiled code         |
-| `npx prisma generate`         | Generate Prisma client                      |
-| `npx prisma migrate dev`      | Apply new migrations                        |
-| `npx prisma studio`           | Open Prisma Studio (DB explorer)            |
-| `npm run seed`                | Seed the database with initial data         |
-
----
+This repository contains the backend for the Comegle platform. It is built with Node.js and uses PostgreSQL as its database. Follow the steps below to set up the backend on your local machine.
 
 ## Project Structure
 
+```text
+.
+├── .gitignore
+├── package.json
+├── prisma/
+├── src/
+├── tsconfig.json
+├── vercel.json
+└── README.md
 ```
-src/
-│
-├── index.ts        # Main Express server
-├── utils/
-│      └── seed.ts       # DB seeding script
-├── swagger.ts      # Swagger API docs definition
-prisma/
-└── schema.prisma   # Prisma database schema
+
+- **prisma/**: Contains Prisma schema and migration files for database management.
+- **src/**: Contains the source code for the backend application.
+- **package.json**: Project metadata and dependencies.
+- **tsconfig.json**: TypeScript configuration.
+- **vercel.json**: Vercel deployment configuration.
+
+## Prerequisites
+
+- [Node.js](https://nodejs.org/) (v16 or above recommended)
+- [npm](https://www.npmjs.com/) or [yarn](https://yarnpkg.com/)
+- [PostgreSQL](https://www.postgresql.org/) (if running locally, otherwise use your own connection string)
+- [Git](https://git-scm.com/)
+
+## Setup Instructions
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/AdityaRaj0001/Comegle_Backend.git
+cd Comegle_Backend
 ```
 
----
+### 2. Install Dependencies
 
-## Notes
+```bash
+npm install
+# or
+yarn install
+```
 
-- This backend is meant to be paired with the Comegle frontend.
-- Make sure your database is accessible from your local machine or deployment environment.
-- For production, consider environment variables for all secrets and use a process manager.
+### 3. Create a `.env` File
 
----
+Create a `.env` file in the root of your project and add the following environment variables:
+
+```env
+DATABASE_URL="your_postgres_database_url"
+PORT=3000
+NODE_ENV=development
+GOOGLE_CLIENT_ID=
+# GOOGLE_CLIENT_SECRET=
+CLIENT_URL=http://localhost:5173
+ACCESS_TOKEN_SECRET=
+REFRESH_TOKEN_SECRET=
+```
+
+**Note:**  
+- Replace `DATABASE_URL` with your own PostgreSQL connection string.
+- Replace `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `ACCESS_TOKEN_SECRET`, and `REFRESH_TOKEN_SECRET` with your actual credentials.
+- Never share your real secrets publicly.
+
+### 4. Run Database Migrations (if using Prisma)
+
+If the project uses [Prisma](https://www.prisma.io/):
+
+```bash
+npx prisma migrate dev
+```
+
+### 5. Start the Server
+
+```bash
+npm start
+# or
+yarn start
+```
+
+The server should now be running on `http://localhost:3000` (or the port specified in your `.env`).
+
+## Additional Notes
+
+- The backend expects the frontend to be running at the URL specified in `CLIENT_URL`.
+- Make sure your PostgreSQL database is accessible using the connection string in `DATABASE_URL`.
+- You may want to set up OAuth credentials for Google authentication if required.
+
+## Troubleshooting
+
+- Ensure all required environment variables are set.
+- If you encounter database connection errors, verify your connection string and database status.
+- Check the project documentation or open an issue if you need help.
 
 ## License
 
-MIT
+This project is licensed under the MIT License.
