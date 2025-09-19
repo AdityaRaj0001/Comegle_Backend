@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { verifyAccessToken } from "../utils/jwt";
+import { verifyAccessToken, verifyRefreshToken, generateAccessToken } from "../utils/jwt";
 
 export const requireAuth = (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
@@ -11,6 +11,19 @@ export const requireAuth = (req: Request, res: Response, next: NextFunction) => 
     (req as any).userId = decoded.userId;
     next();
   } catch (err) {
-    return res.status(401).json({ success: false, message: "Invalid or expired token" });
+    // Try refresh token
+    const refreshToken = req.cookies?.refreshToken;
+    if (!refreshToken) {
+      return res.status(401).json({ success: false, message: "Session timed out" });
+    }
+    try {
+      const decodedRefresh: any = verifyRefreshToken(refreshToken);
+      const newAccessToken = generateAccessToken({ userId: decodedRefresh.userId });
+      (req as any).userId = decodedRefresh.userId;
+      (req as any).newAccessToken = newAccessToken;
+      next(); // <-- Call next: let controller handle response with new token
+    } catch (err) {
+      return res.status(401).json({ success: false, message: "Session timed out" });
+    }
   }
 };
