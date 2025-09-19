@@ -111,3 +111,58 @@ export const googleAuth = async (
     });
   }
 };
+
+export const testAuth = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { email, name, picture } = req.body;
+
+     // ✅ Check if user already exists
+    let user = await prisma.user.findUnique({
+      where: { email },
+      include: { college: true },
+      omit: { createdAt: true, updatedAt: true },
+    });
+
+    
+    if (user) {
+      const payload = { userId: user.id };
+
+      // Generate tokens
+      const accessToken = generateAccessToken(payload);
+      const refreshToken = generateRefreshToken(payload);
+
+      // Set refresh token in httpOnly cookie
+      res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
+
+      // Send access token in body (do NOT send refresh token)
+      res.status(200).json({
+        success: true,
+        message: "User already exists",
+        data: { user, accessToken },
+      });
+      return;
+    } else {
+      //simply return a message that invalid test email
+      res.status(403).json({
+        success: false,
+        message: "Invalid test email",
+      });
+    }
+  } catch (err) {
+    console.error("Google Auth Error:", err);
+    res.status(500).json({
+      success: false,
+      message: "Authentication failed",
+      data: null,
+    });
+  }
+};

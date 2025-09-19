@@ -1,96 +1,64 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from "@prisma/client";
+
 const prisma = new PrismaClient();
 
-export async function seedColleges() {
+async function seedColleges() {
   const colleges = [
-    {
-      name: "IIT Ropar",
-      email_domain: "iitrpr.ac.in",
-      country: "India",
-      state: "Punjab",
-    },
-    {
-      name: "MNNIT Allahabad",
-      email_domain: "mnnit.ac.in",
-      country: "India",
-      state: "Uttar Pradesh",
-    },
-    {
-      name: "IIT Bombay",
-      email_domain: "iitb.ac.in",
-      country: "India",
-      state: "Maharashtra",
-    },
-    {
-      name: "IIT Kharagpur",
-      email_domain: "iitkgp.ac.in",
-      country: "India",
-      state: "West Bengal",
-    },
-    {
-      name: "IIT Madras",
-      email_domain: "iitm.ac.in",
-      country: "India",
-      state: "Tamil Nadu",
-    },
-    {
-      name: "NIT Trichy",
-      email_domain: "nitt.edu",
-      country: "India",
-      state: "Tamil Nadu",
-    },
-    {
-      name: "NIT Surathkal",
-      email_domain: "nitk.ac.in",
-      country: "India",
-      state: "Karnataka",
-    },
-    {
-      name: "NIT Warangal",
-      email_domain: "nitw.ac.in",
-      country: "India",
-      state: "Telangana",
-    },
-    {
-      name: "IIT Delhi",
-      email_domain: "iitd.ac.in",
-      country: "India",
-      state: "Delhi",
-    },
-    {
-      name: "IIT Kanpur",
-      email_domain: "iitk.ac.in",
-      country: "India",
-      state: "Uttar Pradesh",
-    },
-    {
-      name: "SKDIV Inc.",
-      email_domain: "skdiv.com",
-      country: "India",
-      state: "Hyderabad",
-    },
-    {
-      name: "IIT Dholakpur",
-      email_domain: "gmail.com",
-      country: "India",
-      state: "Sikkim",
-    },
+    { name: "Test4", email_domain: "test4.ac.in", country: "India", state: "Rajasthan" },
+    { name: "Test5", email_domain: "test5.ac.in", country: "India", state: "Kerala" },
   ];
 
   for (const college of colleges) {
     await prisma.college.upsert({
       where: { email_domain: college.email_domain },
-      update: {}, // do nothing if exists
+      update: {},
       create: college,
     });
   }
 
-  return { message: "Seeded colleges!" };
+  console.log("✅ Colleges seeded!");
 }
 
-seedColleges()
+async function seedUsers() {
+  const testUsers = [
+    { email: "testuser_test4@test4.ac.in", collegeDomain: "test4.ac.in" },
+    { email: "testuser_test5@test5.ac.in", collegeDomain: "test5.ac.in" },
+  ];
+
+  for (const { email, collegeDomain } of testUsers) {
+    const college = await prisma.college.findUnique({
+      where: { email_domain: collegeDomain },
+    });
+    if (!college) continue;
+
+    await prisma.user.upsert({
+      where: { email },
+      update: {},
+      create: {
+        full_name: email.split("@")[0],
+        username: email.split("@")[0],
+        avatar_url: "https://api.dicebear.com/7.x/identicon/svg?seed=" + email,
+        email,
+        gender: "Other",
+        age: 21,
+        college_id: college.id,
+        country: "India",
+        tags: ["test", "user"],
+      },
+    });
+  }
+
+  console.log("✅ Users seeded!");
+}
+
+async function main() {
+  await seedColleges();
+  await seedUsers();
+}
+
+main()
   .then(() => {
-    console.log("Seeding completed!");
+    console.log("🌱 Seeding completed");
     process.exit(0);
   })
   .catch((e) => {
