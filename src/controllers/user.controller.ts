@@ -86,6 +86,8 @@ export const checkSession = async (req: Request, res: Response): Promise<void> =
 export const saveUserDetails = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = (req as any).userId;
+    const newAccessToken = (req as any).newAccessToken; // <-- will be undefined if not refreshed
+
     if (!userId) {
       res.status(401).json({ success: false, message: "Unauthorized: User not found" });
       return;
@@ -135,9 +137,57 @@ export const saveUserDetails = async (req: Request, res: Response): Promise<void
       include: { college: true, socials: true },
     });
 
-    res.json({ success: true, user: shapeUser(user) });
-  } catch (err: any) {
+    // Respond with new token if it was refreshed
+    if (newAccessToken) {
+      res.json({
+        success: true,
+        user: shapeUser(user),
+        accessToken: newAccessToken
+      });
+    } else {
+      res.json({
+        success: true,
+        user: shapeUser(user)
+      });
+    }
+  }  catch (err: any) {
     console.error("Save user details error:", err);
+
+    // Prisma DB connection closed by upstream (P1017)
+    if (err.code === 'P1017') {
+      res.status(503).json({
+        success: false,
+        message: "Server has closed the connection"
+      });
+      return;
+    }
+
+    // Check for Prisma DB connection error
+    if (
+      err.message &&
+      (
+        err.message.includes("connection closed by upstream database") ||
+        err.message.includes("Error querying the database") ||
+        err.message.includes("FATAL")
+      )
+    ) {
+      res.status(503).json({
+        success: false,
+        message: "Service Unavailable: Database connection error. Please try again later."
+      });
+      return;
+    }
+
+    // Handle Prisma validation errors (optional)
+    if (err.code === "P2002") {
+      res.status(400).json({
+        success: false,
+        message: "Duplicate field value: one of the fields is not unique."
+      });
+      return;
+    }
+
+    // Fallback
     res.status(500).json({
       success: false,
       message: err.message || "Could not save user details",
