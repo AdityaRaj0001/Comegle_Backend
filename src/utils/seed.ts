@@ -2,65 +2,36 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-async function seedColleges() {
-  const colleges = [
-    { name: "Test4", email_domain: "test4.ac.in", country: "India", state: "Rajasthan" },
-    { name: "Test5", email_domain: "test5.ac.in", country: "India", state: "Kerala" },
+async function seedUserSocials() {
+  const testUsersEmails = [
+    "testuser_test1@test1.ac.in",
+    "testuser_test2@test2.ac.in",
+    "testuser_test3@test3.ac.in",
+    "testuser_test4@test4.ac.in",
+    "testuser_test5@test5.ac.in",
   ];
 
-  for (const college of colleges) {
-    await prisma.college.upsert({
-      where: { email_domain: college.email_domain },
-      update: {},
-      create: college,
-    });
-  }
+  for (const email of testUsersEmails) {
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) continue;
 
-  console.log("✅ Colleges seeded!");
-}
-
-async function seedUsers() {
-  const testUsers = [
-    { email: "testuser_test4@test4.ac.in", collegeDomain: "test4.ac.in" },
-    { email: "testuser_test5@test5.ac.in", collegeDomain: "test5.ac.in" },
-  ];
-
-  for (const { email, collegeDomain } of testUsers) {
-    const college = await prisma.college.findUnique({
-      where: { email_domain: collegeDomain },
-    });
-    if (!college) continue;
-
-    await prisma.user.upsert({
-      where: { email },
+    await prisma.userSocials.upsert({
+      where: { user_id: user.id },
       update: {},
       create: {
-        full_name: email.split("@")[0],
-        username: email.split("@")[0],
-        avatar_url: "https://api.dicebear.com/7.x/identicon/svg?seed=" + email,
-        email,
-        gender: "Other",
-        age: 21,
-        college_id: college.id,
-        country: "India",
-        tags: ["test", "user"],
+        user_id: user.id,
+        linked_in: `https://linkedin.com/in/${user.username}`,
+        twitter: `https://twitter.com/${user.username}`,
+        instagram: `https://instagram.com/${user.username}`,
       },
     });
   }
 
-  console.log("✅ Users seeded!");
+  console.log("✅ UserSocials seeded for existing users!");
 }
 
-async function main() {
-  await seedColleges();
-  await seedUsers();
-}
-
-main()
-  .then(() => {
-    console.log("🌱 Seeding completed");
-    process.exit(0);
-  })
+seedUserSocials()
+  .then(() => process.exit(0))
   .catch((e) => {
     console.error(e);
     process.exit(1);
