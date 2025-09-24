@@ -222,13 +222,13 @@ const nits = [
     state: "Maharashtra",
   },
   {
-    name: "NIT Allahabad",
-    email_domain: "mnnit.ac.in",
-    country: "India",
-    state: "Uttar Pradesh",
-  },
-  {
     name: "NIT Goa",
+    {
+      name: "NIT Allahabad",
+      email_domain: "mnnit.ac.in",
+      country: "India",
+      state: "Uttar Pradesh",
+    },
     email_domain: "nitgoa.ac.in",
     country: "India",
     state: "Goa",
