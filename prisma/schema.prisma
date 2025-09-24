@@ -28,13 +28,13 @@ model User {
   email      String @unique
   gender     Gender
   age        Int
-  country    String  @default("")
+  country    String @default("")
 
   college_id String
   college    College @relation(fields: [college_id], references: [id])
 
-  bio     String?
-  tags       String[]  
+  bio  String?
+  tags String[]
 
   socials UserSocials?
 
@@ -43,14 +43,14 @@ model User {
 }
 
 model UserSocials {
-  id         String   @id @default(uuid())
-  linked_in  String?
-  twitter    String?
-  instagram  String?
-  user_id    String   @unique
-  user       User     @relation(fields: [user_id], references: [id])
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @default(now()) @updatedAt
+  id        String   @id @default(uuid())
+  linked_in String?
+  twitter   String?
+  instagram String?
+  user_id   String   @unique
+  user      User     @relation(fields: [user_id], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 }
 
 enum Gender {
@@ -58,4 +58,13 @@ enum Gender {
   Female
   Other
   PreferNotToSay
+}
+
+model CollegeWaitlist {
+  id             String   @id @default(uuid())
+  requester_name String
+  college_name   String
+  email_domain   String   @unique
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now()) @updatedAt
 }
