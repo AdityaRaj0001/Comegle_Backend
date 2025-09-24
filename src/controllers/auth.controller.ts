@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
 import { prisma } from "../config/db";
 
 import { verifyGoogleIdToken } from "../utils/google";
