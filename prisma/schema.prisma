@@ -37,9 +37,10 @@ model User {
   tags String[]
 
   socials UserSocials?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
+ 
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @default(now()) @updatedAt
+  CommunityWaitlist CommunityWaitlist[]
 }
 
 model UserSocials {
@@ -74,4 +75,16 @@ model CollegeWaitlist {
   status         WaitlistStatus @default(PENDING)
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @default(now()) @updatedAt
+}
+
+model CommunityWaitlist {
+  id             String         @id @default(uuid())
+  community_name String
+  status         WaitlistStatus @default(PENDING)
+
+  user_id String
+  user    User   @relation(fields: [user_id], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 }
