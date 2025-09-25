@@ -2,14 +2,14 @@ import { Request, Response } from "express";
 import { prisma } from "../config/db";
 import jwt from "jsonwebtoken";
 
-import { generateAccessToken,generateRefreshToken } from "../utils/jwt";
+import { generateAccessToken, generateRefreshToken } from "../utils/jwt";
 
 export const saveUserOnboarding = async (
   req: Request,
   res: Response
 ): Promise<void> => {
   try {
-    const { full_name, username, avatar_url, email, gender, age, college_id } =
+    const { full_name, username, avatar_url, email, gender, dob, college_id } =
       req.body;
 
     // check if username already exists
@@ -57,7 +57,7 @@ export const saveUserOnboarding = async (
         avatar_url,
         email,
         gender,
-        age: Number(age),
+        dob: new Date(dob),
         college_id: college_id,
       },
       include: { college: true },
@@ -65,23 +65,22 @@ export const saveUserOnboarding = async (
     });
 
     if (newUser) {
-     
       const accessToken = generateAccessToken({ userId: newUser.id });
       const refreshToken = generateRefreshToken({ userId: newUser.id });
       // set the refresh token as cookie
-res.cookie("refreshToken", refreshToken, {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "lax",
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-});
+      res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
 
-// send access token in response
-res.status(201).json({
-  success: true,
-  message: "Onboarding complete.",
-  data: { user: newUser, accessToken },
-});
+      // send access token in response
+      res.status(201).json({
+        success: true,
+        message: "Onboarding complete.",
+        data: { user: newUser, accessToken },
+      });
       return;
     }
   } catch (err) {
