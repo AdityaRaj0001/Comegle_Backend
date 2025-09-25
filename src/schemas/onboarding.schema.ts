@@ -18,5 +18,18 @@ export const saveUserSchema = z.object({
   gender: z.enum(["Male", "Female", "Other"], {
     message: "Gender must be Male, Female, or Other",
   }),
-  age: z.int().min(16, "Minimum age is 16").max(100, "Maximum age is 100"),
+ dob: z
+    .preprocess((val) => {
+      if (typeof val === "string" || val instanceof Date) {
+        return new Date(val);
+      }
+    }, z.date())
+    .refine((date) => {
+      const today = new Date();
+      const age =
+        today.getFullYear() -
+        date.getFullYear() -
+        (today < new Date(today.getFullYear(), date.getMonth(), date.getDate()) ? 1 : 0);
+      return age >= 16 && age <= 100;
+    }, { message: "Age must be between 16 and 100" }),
 });

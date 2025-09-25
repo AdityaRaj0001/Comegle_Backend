@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { Gender, PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -223,12 +223,6 @@ const nits = [
   },
   {
     name: "NIT Goa",
-    {
-      name: "NIT Allahabad",
-      email_domain: "mnnit.ac.in",
-      country: "India",
-      state: "Uttar Pradesh",
-    },
     email_domain: "nitgoa.ac.in",
     country: "India",
     state: "Goa",
@@ -510,14 +504,14 @@ async function seedColleges() {
 
 async function seedUsers() {
   const testUsers = [
-    { email: "testuser_test1@test1.ac.in", collegeDomain: "test1.ac.in" },
-    { email: "testuser_test2@test2.ac.in", collegeDomain: "test2.ac.in" },
-    { email: "testuser_test3@test3.ac.in", collegeDomain: "test3.ac.in" },
-    { email: "testuser_test4@test4.ac.in", collegeDomain: "test4.ac.in" },
-    { email: "testuser_test5@test5.ac.in", collegeDomain: "test5.ac.in" },
+    { email: "testuser_test1@test1.ac.in", collegeDomain: "test1.ac.in", dob: new Date("2000-01-01"), gender: Gender.OTHER },
+    { email: "testuser_test2@test2.ac.in", collegeDomain: "test2.ac.in", dob: new Date("2000-01-01"), gender: Gender.MALE },
+    { email: "testuser_test3@test3.ac.in", collegeDomain: "test3.ac.in", dob: new Date("2000-01-01"), gender: Gender.FEMALE },
+    { email: "testuser_test4@test4.ac.in", collegeDomain: "test4.ac.in", dob: new Date("2000-01-01"), gender: Gender.PREFER_NOT_TO_SAY },
+    { email: "testuser_test5@test5.ac.in", collegeDomain: "test5.ac.in", dob: new Date("2000-01-01"), gender: Gender.MALE },
   ];
 
-  for (const { email, collegeDomain } of testUsers) {
+  for (const { email, collegeDomain, dob, gender } of testUsers) {
     const college = await prisma.college.findUnique({
       where: { email_domain: collegeDomain },
     });
@@ -531,8 +525,8 @@ async function seedUsers() {
         username: email.split("@")[0],
         avatar_url: "https://api.dicebear.com/7.x/identicon/svg?seed=" + email,
         email,
-        gender: "Other",
-        age: 21,
+        gender,
+        dob,
         college_id: college.id,
         country: "India",
         tags: ["test", "user"],
@@ -543,9 +537,30 @@ async function seedUsers() {
   console.log("✅ Users seeded!");
 }
 
+async function seedUserSocials() {
+  const users = await prisma.user.findMany();
+
+  for (const user of users) {
+    await prisma.userSocials.upsert({
+      where: { user_id: user.id },
+      update: {}, // don’t overwrite if already present
+      create: {
+        user_id: user.id,
+        linked_in: `https://linkedin.com/in/${user.username}`,
+        twitter: `https://twitter.com/${user.username}`,
+        instagram: `https://instagram.com/${user.username}`,
+      },
+    });
+  }
+
+  console.log("✅ User socials seeded!");
+}
+
+
 async function main() {
-  await seedColleges();
+  // await seedColleges();
   // await seedUsers();
+   await seedUserSocials();
 }
 
 main()
