@@ -8,6 +8,6 @@ import { addCommunityToWaitListSchema } from "../schemas/communities.schema";
 
 const router = Router();
 
-router.post("/add_community", requireAuth, validateRequest(addCommunityToWaitListSchema), addCommunityToWaitlist);
+router.post("/add", requireAuth, validateRequest(addCommunityToWaitListSchema), addCommunityToWaitlist);
 
 export default router;
