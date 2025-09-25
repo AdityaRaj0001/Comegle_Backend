@@ -14,14 +14,14 @@ export const saveEditUserProfileSchema = z.object({
       message: "Username must contain only letters, numbers, or underscores",
     })
     .optional(),
-  avatar_url: z.string().url("Invalid avatar URL").optional(),
+  avatar_url: z.url("Invalid avatar URL").optional(),
   gender: z
     .enum(["MALE", "FEMALE", "OTHER", "PREFER_NOT_TO_SAY"], {
       message: "Gender must be one of the allowed values",
     })
     .optional(),
-  country: z.string().max(50, "Country name too long").optional(),
-  bio: z.string().max(200, "Bio too long").optional(),
+  country: z.string().max(50, "Country name must be at most 50 characters long").optional(),
+  bio: z.string().max(200, "Bio must be at most 200 characters long").optional(),
   tags: z
     .array(z.string().min(1, "Tag cannot be empty"))
     .max(10, "Max 10 tags allowed")
