@@ -28,9 +28,18 @@ export const saveEditUserProfileSchema = z.object({
     .optional(),
   socials: z
     .object({
-      linked_in: z.string().url("Invalid LinkedIn URL").optional(),
-      twitter: z.string().url("Invalid Twitter URL").optional(),
-      instagram: z.string().url("Invalid Instagram URL").optional(),
+      linked_in: z
+        .url("Invalid LinkedIn URL")
+        .or(z.literal(""))
+        .optional(),
+      twitter: z
+        .url("Invalid Twitter URL")
+        .or(z.literal(""))
+        .optional(),
+      instagram: z
+        .url("Invalid Instagram URL")
+        .or(z.literal(""))
+        .optional(),
     })
     .optional(),
 });
