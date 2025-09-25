@@ -18,7 +18,7 @@ export const requestCollegeAccessSchema = z.object({
   college_name: z
     .string()
     .min(3, "College name must be at least 3 characters")
-    .max(100, "College name must be at most 100 characters"),111111111
+    .max(100, "College name must be at most 100 characters"),
   college_email: z.email("Invalid email address").refine(
     (email) => {
       const domain = email.split("@")[1].toLowerCase();
