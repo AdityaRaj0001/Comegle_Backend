@@ -10,11 +10,24 @@ export const createCollegeAccessRequest = async (
 
     const email_domain = college_email.split("@")[1].toLowerCase();
 
+    
+    //check in college table if the college exists
+    const collegeExists = await prisma.college.findUnique({
+      where: { email_domain },
+    });
+
+    if(collegeExists){
+      return res.status(400).json({
+        success: false,
+        message: "This college is already registered. You can sign up directly from home page.",
+        data: null,
+      });
+    }
+    
     // Check for existing request with the same email domain
     const existing = await prisma.collegeWaitlist.findUnique({
       where: { email_domain },
     });
-
     if (existing) {
       return res.status(400).json({
         success: false,
