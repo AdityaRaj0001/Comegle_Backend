@@ -15,8 +15,8 @@ export const saveUserSchema = z.object({
   avatar_url: z.url("Invalid avatar URL"),
   email: z.email("Invalid email address"),
   college_id: z.uuid("Invalid collegeId"),
-  gender: z.enum(["Male", "Female", "Other"], {
-    message: "Gender must be Male, Female, or Other",
+  gender: z.enum(["MALE", "FEMALE", "OTHER", "PREFER_NOT_TO_SAY"], {
+    message: "Gender must be one of the allowed values",
   }),
  dob: z
     .preprocess((val) => {
