@@ -1,9 +1,15 @@
 import { Router } from "express";
 import { checkSession } from "../controllers/user.controller";
-import { saveUserDetails } from "../controllers/user.controller"
+import { saveUserDetails } from "../controllers/user.controller";
 import { requireAuth } from "../middlewares/auth";
+import { validateRequest } from "../middlewares/validateRequest";
+import { saveEditUserProfileSchema } from "../schemas/saveEditUserProfile.schema";
 import ImageKit from "imagekit";
-import { IMAGE_KIT_PRIVATE_KEY, IMAGE_KIT_PUBLIC_KEY, IMAGE_KIT_URL_ENDPOINT } from "../config/env";
+import {
+  IMAGE_KIT_PRIVATE_KEY,
+  IMAGE_KIT_PUBLIC_KEY,
+  IMAGE_KIT_URL_ENDPOINT,
+} from "../config/env";
 
 const imagekit = new ImageKit({
   urlEndpoint: IMAGE_KIT_URL_ENDPOINT,
@@ -14,8 +20,12 @@ const imagekit = new ImageKit({
 const router = Router();
 
 router.get("/session", checkSession);
-router.post("/save", requireAuth, saveUserDetails);
-
+router.post(
+  "/save",
+  requireAuth,
+  validateRequest(saveEditUserProfileSchema), // ✅ validate payload first
+  saveUserDetails
+);
 router.get("/image/auth", function (req, res) {
   var result = imagekit.getAuthenticationParameters();
   res.send(result);
