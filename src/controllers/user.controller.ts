@@ -86,35 +86,19 @@ export const checkSession = async (req: Request, res: Response): Promise<void> =
 export const saveUserDetails = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = (req as any).userId;
-    const newAccessToken = (req as any).newAccessToken; // <-- will be undefined if not refreshed
+    const newAccessToken = (req as any).newAccessToken;
 
     if (!userId) {
       res.status(401).json({ success: false, message: "Unauthorized: User not found" });
       return;
     }
 
-    const {
-      full_name,
-      username,
-      avatar_url,
-      gender,
-      country,
-      bio,
-      tags,
-      socials,
-    } = req.body;
+    const { socials, ...otherFields } = req.body;
 
-    const updateData: any = {};
-    if (full_name !== undefined) updateData.full_name = full_name;
-    if (username !== undefined) updateData.username = username;
-    if (avatar_url !== undefined) updateData.avatar_url = avatar_url;
-    if (gender !== undefined) updateData.gender = gender;
-    if (country !== undefined) updateData.country = country;
-    if (bio !== undefined) updateData.bio = bio;
-    if (tags !== undefined) updateData.tags = tags;
+    const updateData: any = { ...otherFields };
 
-    // Always upsert socials, even if empty strings, so user can clear links
-    if (socials !== undefined) {
+    // Upsert socials if provided
+    if (socials) {
       updateData.socials = {
         upsert: {
           update: {
@@ -137,57 +121,25 @@ export const saveUserDetails = async (req: Request, res: Response): Promise<void
       include: { college: true, socials: true },
     });
 
-    // Respond with new token if it was refreshed
-    if (newAccessToken) {
-      res.json({
-        success: true,
-        user: shapeUser(user),
-        accessToken: newAccessToken
-      });
-    } else {
-      res.json({
-        success: true,
-        user: shapeUser(user)
-      });
-    }
-  }  catch (err: any) {
+    res.json({
+      success: true,
+      user: shapeUser(user),
+      ...(newAccessToken && { accessToken: newAccessToken }),
+    });
+  } catch (err: any) {
     console.error("Save user details error:", err);
 
-    // Prisma DB connection closed by upstream (P1017)
-    if (err.code === 'P1017') {
-      res.status(503).json({
-        success: false,
-        message: "Server has closed the connection"
-      });
+    if (err.code === 'P1017' || 
+        (err.message && /connection closed by upstream|Error querying the database|FATAL/i.test(err.message))) {
+      res.status(503).json({ success: false, message: "Service Unavailable: Database connection error" });
       return;
     }
 
-    // Check for Prisma DB connection error
-    if (
-      err.message &&
-      (
-        err.message.includes("connection closed by upstream database") ||
-        err.message.includes("Error querying the database") ||
-        err.message.includes("FATAL")
-      )
-    ) {
-      res.status(503).json({
-        success: false,
-        message: "Service Unavailable: Database connection error. Please try again later."
-      });
-      return;
-    }
-
-    // Handle Prisma validation errors (optional)
     if (err.code === "P2002") {
-      res.status(400).json({
-        success: false,
-        message: "Duplicate field value: one of the fields is not unique."
-      });
+      res.status(400).json({ success: false, message: "Duplicate field value: one of the fields is not unique." });
       return;
     }
 
-    // Fallback
     res.status(500).json({
       success: false,
       message: err.message || "Could not save user details",
